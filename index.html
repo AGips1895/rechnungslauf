@@ -1,0 +1,1438 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Rechnungslauf</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#2B5C56">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F7F5F0; --card:#FFFFFF; --ink:#1F2D2B; --ink-soft:#5B6B67;
+    --petrol:#2B5C56; --petrol-light:#DCE8E6;
+    --amber:#C08A2E; --amber-light:#F3E4C8;
+    --sage:#5A7D5A; --sage-light:#E1E9DC;
+    --terracotta:#B5533C; --terracotta-light:#F4DFD8;
+    --line:#DDD8CC;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;-webkit-font-smoothing:antialiased;padding-bottom:env(safe-area-inset-bottom);}
+  .wrap{max-width:1120px;margin:0 auto;padding:24px 20px 80px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--petrol);margin-bottom:8px;}
+  h1{font-family:'Fraunces',serif;font-weight:600;font-size:34px;letter-spacing:-.01em;margin:0 0 6px;}
+  .sub{color:var(--ink-soft);font-size:14.5px;max-width:620px;line-height:1.5;margin-bottom:20px;}
+
+  .tabs{display:flex;gap:8px;margin-bottom:24px;border-bottom:1px solid var(--line);flex-wrap:wrap;}
+  .tab{padding:10px 4px;margin-right:20px;background:none;border:none;font-family:'Inter',sans-serif;font-weight:600;font-size:14.5px;color:var(--ink-soft);cursor:pointer;border-bottom:2px solid transparent;}
+  .tab.active{color:var(--petrol);border-bottom-color:var(--petrol);}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px;margin-bottom:20px;}
+  .panel h2{font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin:0 0 14px;}
+  .panel h3{font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin:0 0 10px;}
+  .btn{padding:10px 16px;border-radius:7px;border:none;font-family:'Inter',sans-serif;font-weight:600;font-size:13.5px;cursor:pointer;transition:filter .15s ease;}
+  .btn:hover{filter:brightness(0.94);}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .btn-primary{background:var(--petrol);color:#fff;}
+  .btn-amber{background:var(--amber);color:#fff;}
+  .btn-sage{background:var(--sage);color:#fff;}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--line);}
+  .btn-block{width:100%;padding:14px;font-size:15px;}
+  .btn-sm{padding:6px 11px;font-size:12.5px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:5px;}
+  .field input, .field select{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:7px;font-family:'Inter',sans-serif;font-size:15px;background:#fff;color:var(--ink);}
+  .field input:focus, .field select:focus{outline:2px solid var(--petrol);outline-offset:1px;}
+  .status-line{font-size:12.5px;color:var(--ink-soft);margin:8px 0;min-height:16px;}
+  .status-line.ok{color:var(--sage);}
+  .status-line.warn{color:var(--terracotta);}
+
+  /* Lock */
+  .lock-panel{background:var(--petrol);color:#fff;border-radius:12px;padding:18px 20px;margin-bottom:20px;}
+  .lock-panel h2{font-family:'Fraunces',serif;font-size:17px;font-weight:600;margin:0 0 6px;color:#fff;}
+  .lock-panel p{font-size:12.5px;color:#DCE8E6;margin:0 0 12px;line-height:1.5;}
+  .lock-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .lock-row input{flex:1;min-width:180px;padding:10px 11px;border-radius:7px;border:1px solid rgba(255,255,255,.3);font-size:15px;}
+  .lock-panel .btn{background:#fff;color:var(--petrol);}
+  .lock-panel.unlocked{background:var(--sage-light);color:var(--ink);padding:10px 16px;display:flex;align-items:center;gap:10px;}
+  .lock-panel.unlocked p, .lock-panel.unlocked h2{color:var(--ink);margin:0;}
+  .lock-panel.unlocked .btn{background:transparent;color:var(--ink-soft);border:1px solid var(--line);margin-left:auto;}
+  .lock-error{font-size:12.5px;color:#F4DFD8;margin-top:8px;}
+  .lock-link{background:none;border:none;color:#DCE8E6;text-decoration:underline;font-size:12px;cursor:pointer;padding:0;margin-top:8px;}
+
+  /* Scan view */
+  #cam-input{display:none;}
+  .capture-box{border:1.5px dashed var(--line);border-radius:12px;padding:28px 16px;text-align:center;margin-bottom:10px;cursor:pointer;background:#fff;}
+  .capture-box .hint{font-size:13px;color:var(--ink-soft);margin-top:8px;}
+  .page-thumbs{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0;}
+  .page-thumb{position:relative;width:72px;height:72px;border-radius:8px;overflow:hidden;border:1px solid var(--line);}
+  .page-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .page-thumb .num{position:absolute;top:2px;left:2px;background:rgba(43,92,86,.85);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:10px;padding:1px 5px;border-radius:4px;}
+  .page-thumb .rm{position:absolute;top:2px;right:2px;background:rgba(181,83,60,.9);color:#fff;width:18px;height:18px;border-radius:50%;border:none;font-size:11px;cursor:pointer;line-height:1;}
+  .outbox-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+  .outbox-item:last-child{border-bottom:none;}
+  .pill{font-family:'IBM Plex Mono',monospace;font-size:11px;padding:2px 8px;border-radius:999px;display:inline-block;}
+  .pill.sent{background:var(--sage-light);color:var(--sage);}
+  .pill.pending{background:var(--amber-light);color:var(--amber);}
+  .pill.bezahlt{background:var(--sage-light);color:var(--sage);cursor:pointer;border:none;}
+  .pill.offen{background:var(--terracotta-light);color:var(--terracotta);cursor:pointer;border:none;}
+
+  /* Tracker */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px 18px;}
+  .stat .num{font-family:'Fraunces',serif;font-size:26px;font-weight:600;line-height:1;}
+  .stat .lbl{font-size:12px;color:var(--ink-soft);margin-top:6px;}
+  .stat.warn .num{color:var(--terracotta);}
+  .form-grid{display:grid;grid-template-columns:130px 130px 1fr 100px 1fr;gap:12px;align-items:end;}
+  .form-actions{grid-column:1/-1;display:flex;gap:8px;justify-content:flex-end;margin-top:4px;}
+  .filters{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+  .chip{padding:6px 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);font-size:13px;color:var(--ink-soft);cursor:pointer;}
+  .chip.active{background:var(--petrol);color:#fff;border-color:var(--petrol);}
+  .filter-label{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin:10px 0 4px;}
+
+  .row{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:8px;}
+  .row-main{display:grid;grid-template-columns:22px 88px 92px 1fr 90px 210px 60px 78px auto;gap:12px;align-items:center;}
+  .row.overdue{border-color:var(--terracotta);}
+  .row input[type=checkbox]{width:17px;height:17px;accent-color:var(--petrol);cursor:pointer;}
+  .datum{font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink-soft);}
+  .person-tag{font-size:11px;font-weight:600;color:var(--petrol);background:var(--petrol-light);padding:2px 7px;border-radius:5px;display:inline-block;}
+  .clickable{cursor:pointer;}
+  .arzt{font-weight:600;font-size:14.5px;}
+  .notiz{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .betrag{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;text-align:right;}
+  .pipeline{display:flex;align-items:center;}
+  .stage{flex:1;position:relative;height:26px;display:flex;align-items:center;justify-content:center;}
+  .stage .seg{width:100%;height:6px;border-radius:3px;background:var(--line);cursor:pointer;}
+  .stage:first-child .seg{border-radius:3px 0 0 3px;}
+  .stage:last-child .seg{border-radius:0 3px 3px 0;}
+  .stage.done .seg{background:var(--petrol-light);}
+  .stage.current .seg{background:var(--petrol);}
+  .stage.overdue.current .seg{background:var(--terracotta);}
+  .stage-label{position:absolute;top:-16px;font-size:9px;letter-spacing:.03em;text-transform:uppercase;color:var(--ink-soft);white-space:nowrap;}
+  .tage{font-family:'IBM Plex Mono',monospace;font-size:11.5px;text-align:center;}
+  .tage.warn{color:var(--terracotta);font-weight:600;}
+  .tage.done{color:var(--sage);font-weight:600;}
+  .actions{display:flex;gap:5px;justify-content:flex-end;}
+  .icon-btn{width:29px;height:29px;border-radius:7px;border:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink-soft);font-size:13px;}
+  .icon-btn:hover{background:var(--bg);}
+  .empty{text-align:center;padding:50px 20px;color:var(--ink-soft);font-size:14px;}
+  .empty .big{font-family:'Fraunces',serif;font-size:20px;color:var(--ink);margin-bottom:8px;}
+  .folder-status{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--ink-soft);flex-wrap:wrap;}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--line);}
+  .dot.on{background:var(--sage);}
+
+  .detail{display:none;margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);}
+  .detail.open{display:block;}
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+  .detail-field label{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft);margin-bottom:4px;}
+  .detail-field input, .detail-field select{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:6px;font-size:13.5px;}
+  .diff{font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;}
+  .diff.zero{color:var(--sage);}
+  .diff.nonzero{color:var(--terracotta);}
+  .detail-meta{font-size:12px;color:var(--ink-soft);margin-top:10px;line-height:1.6;}
+  .detail-meta code{background:var(--bg);padding:1px 5px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:11.5px;}
+
+  .bulk-bar{position:sticky;top:0;z-index:5;background:var(--petrol);color:#fff;border-radius:10px;padding:12px 16px;margin-bottom:12px;display:none;align-items:center;gap:14px;flex-wrap:wrap;font-size:13.5px;}
+  .bulk-bar.show{display:flex;}
+  .bulk-bar .sum{font-family:'IBM Plex Mono',monospace;opacity:.9;}
+  .bulk-bar .spacer{flex:1;}
+  .bulk-bar .btn{background:#fff;color:var(--petrol);}
+  .bulk-bar .btn-outline{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.5);}
+
+  .erstattung-list-row{display:grid;grid-template-columns:22px 90px 1fr 80px 130px;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;}
+  .erstattung-list-row:last-child{border-bottom:none;}
+  .erstattung-list-row input[type=number]{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-family:'IBM Plex Mono',monospace;}
+
+  .person-row{display:grid;grid-template-columns:1fr 160px 160px auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);}
+  .person-row:last-child{border-bottom:none;}
+  .person-row input{padding:8px 9px;border:1px solid var(--line);border-radius:6px;font-size:14px;}
+  .person-row select{padding:8px 9px;border:1px solid var(--line);border-radius:6px;font-size:13px;}
+
+  @media (max-width:900px){
+    .form-grid{grid-template-columns:1fr 1fr;}
+    .row-main{grid-template-columns:1fr;}
+    .stats{grid-template-columns:1fr 1fr;}
+    .detail-grid{grid-template-columns:1fr;}
+    .person-row{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Beihilfe &amp; PKV · Eigenständige App</div>
+  <h1>Rechnungslauf</h1>
+  <p class="sub">Scannen auf dem Handy, verwalten am PC – verbunden über deinen OneDrive- oder Google-Drive-Ordner.</p>
+
+  <div class="lock-panel" id="lock-panel"></div>
+
+  <div class="tabs">
+    <button class="tab" data-tab="scan">📷 Scannen</button>
+    <button class="tab" data-tab="track">🗂 Verwalten</button>
+    <button class="tab" data-tab="settings">⚙️ Personen</button>
+    <button class="tab" data-tab="trash">🗑 Papierkorb</button>
+  </div>
+
+  <!-- SCAN VIEW -->
+  <div class="view" id="view-scan">
+    <div class="panel">
+      <h2>Rechnung oder Rezept erfassen</h2>
+      <label class="capture-box" id="capture-box">
+        <div id="capture-placeholder">
+          <div style="font-size:32px;">📄</div>
+          <div class="hint">Antippen, um mit der Kamera zu scannen</div>
+        </div>
+        <input type="file" id="cam-input" accept="image/*" capture="environment">
+      </label>
+      <div id="page-thumbs" class="page-thumbs"></div>
+      <button class="btn btn-ghost btn-block" id="add-page-btn" style="display:none;">+ Weitere Seite fotografieren</button>
+      <div class="status-line" id="ocr-status"></div>
+
+      <div class="field"><label>Person</label><select id="m-person"></select></div>
+      <div class="field"><label>Typ</label>
+        <select id="m-typ"><option value="rechnung">Rechnung</option><option value="rezept">Rezept</option></select>
+      </div>
+      <div class="field"><label>Datum</label><input type="date" id="m-datum"></div>
+      <div class="field"><label>Arzt / Praxis</label><input type="text" id="m-arzt" placeholder="z. B. Dr. Meyer, Orthopädie"></div>
+      <div class="field"><label>Betrag (€)</label><input type="number" step="0.01" id="m-betrag" placeholder="0,00"></div>
+      <div class="field"><label>Notiz (optional)</label><input type="text" id="m-notiz" placeholder="z. B. Rechnungsnummer"></div>
+
+      <button class="btn btn-amber btn-block" id="save-share-btn">Speichern &amp; an OneDrive/Drive senden</button>
+      <div class="status-line" id="share-status"></div>
+    </div>
+
+    <div class="panel">
+      <h2>Zuletzt gescannt (auf diesem Gerät)</h2>
+      <div id="outbox-list"><div class="empty">Noch keine Scans auf diesem Gerät.</div></div>
+    </div>
+  </div>
+
+  <!-- TRACKER VIEW -->
+  <div class="view" id="view-track">
+    <div class="panel">
+      <h2>Ordner-Verknüpfung</h2>
+      <div class="folder-status">
+        <span class="dot" id="folder-dot"></span>
+        <span id="folder-text">Kein Ordner verknüpft.</span>
+        <button class="btn btn-primary" id="link-folder-btn" style="margin-left:auto;">Ordner verknüpfen</button>
+        <button class="btn btn-ghost" id="import-eingang-btn">Eingang importieren</button>
+      </div>
+      <div class="status-line" id="fs-support-note"></div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="panel">
+      <h2 id="form-title">Neue Rechnung / neues Rezept erfassen</h2>
+      <div class="form-grid">
+        <div class="field"><label>Person</label><select id="f-person"></select></div>
+        <div class="field"><label>Typ</label>
+          <select id="f-typ"><option value="rechnung">Rechnung</option><option value="rezept">Rezept</option></select>
+        </div>
+        <div class="field"><label>Arzt / Praxis</label><input type="text" id="f-arzt" placeholder="z. B. Dr. Meyer, Orthopädie"></div>
+        <div class="field"><label>Betrag (€)</label><input type="number" step="0.01" id="f-betrag" placeholder="0,00"></div>
+        <div class="field"><label>Notiz (optional)</label><input type="text" id="f-notiz" placeholder="z. B. Rechnungsnummer"></div>
+        <div class="field"><label>Datum</label><input type="date" id="f-datum"></div>
+        <div class="form-actions">
+          <button class="btn btn-ghost" id="cancel-edit" style="display:none;">Abbrechen</button>
+          <button class="btn btn-primary" id="save-btn">Speichern</button>
+        </div>
+      </div>
+      <div class="status-line" style="margin-top:14px;">
+        Warnschwelle: nach <input type="number" id="threshold" min="1" style="width:56px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;font-family:'IBM Plex Mono',monospace;"> Tagen im selben Status gilt ein Vorgang als überfällig.
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Erstattungsvermerk zuordnen</h2>
+      <p class="status-line">Beleg von der Versicherung importieren, dann die erstatteten Beträge den betroffenen Vorgängen zuordnen.</p>
+      <div class="form-grid" style="grid-template-columns:160px 1fr auto;">
+        <div class="field"><label>Für welche Versicherung?</label>
+          <select id="e-target"><option value="vers1">Versicherung 1</option><option value="vers2">Versicherung 2</option></select>
+        </div>
+        <div class="field"><label>Beleg hochladen (Foto/PDF vom Erstattungsvermerk)</label><input type="file" id="e-file" accept="image/*,application/pdf"></div>
+        <div class="form-actions" style="align-self:end;"><button class="btn btn-primary" id="e-load-btn">Vorgänge laden</button></div>
+      </div>
+      <div id="e-doc-status" class="status-line"></div>
+      <div id="e-list"></div>
+      <div id="e-actions" style="display:none;margin-top:12px;">
+        <button class="btn btn-sage" id="e-save-btn">Erstattungen speichern</button>
+        <button class="btn btn-amber" id="e-forward-btn" style="display:none;">Ausgewählte für Versicherung 2 exportieren &amp; versenden</button>
+        <button class="btn btn-amber" id="e-finish-btn" style="display:none;">Ausgewählte als erledigt markieren</button>
+      </div>
+    </div>
+
+    <div class="filters" id="filters-status"></div>
+    <div class="filters" id="filters-person"></div>
+    <div class="filters" id="filters-bezahlt"></div>
+
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="btn btn-ghost" id="export-csv-btn">Als CSV exportieren (mit Summen)</button>
+    </div>
+
+    <div class="bulk-bar" id="bulk-bar">
+      <span id="bulk-count"></span>
+      <span class="sum" id="bulk-sum"></span>
+      <span class="spacer"></span>
+      <button class="btn" id="bundle-btn">Sammel-PDF erstellen</button>
+      <button class="btn btn-outline" id="clear-selection-btn">Auswahl aufheben</button>
+    </div>
+    <div id="list"></div>
+  </div>
+
+  <!-- SETTINGS VIEW -->
+  <div class="view" id="view-settings">
+    <div class="panel">
+      <h2>Personen</h2>
+      <p class="status-line">Für jede Person hinterlegst du, über wie viele Versicherungen ihre Rechnungen bzw. Rezepte laufen. Die Namen werden nur in deinen eigenen, verschlüsselt-fern gespeicherten Daten geführt, nie im App-Code.</p>
+      <div id="person-list"></div>
+      <button class="btn btn-ghost" id="add-person-btn" style="margin-top:12px;">+ Person hinzufügen</button>
+    </div>
+    <div class="panel">
+      <button class="btn btn-primary" id="save-people-btn">Personen speichern</button>
+      <div class="status-line" id="people-status"></div>
+    </div>
+  </div>
+
+  <!-- TRASH VIEW -->
+  <div class="view" id="view-trash">
+    <div class="panel">
+      <h2>Papierkorb</h2>
+      <p class="status-line">Gelöschte Vorgänge landen hier und können wiederhergestellt werden. Erst "Endgültig löschen" entfernt sie – und die zugehörigen Scans/PDFs im Ordner – unwiderruflich.</p>
+      <button class="btn btn-ghost" id="empty-trash-btn">Papierkorb komplett leeren</button>
+    </div>
+    <div id="trash-list"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script>
+/* ===========================================================
+   Grunddaten
+=========================================================== */
+const ONE_INS_STAGES  = [{key:'neu',label:'Neu'},{key:'vers1',label:'Versicherung'},{key:'erledigt',label:'Erledigt'}];
+const TWO_INS_STAGES  = [{key:'neu',label:'Neu'},{key:'vers1',label:'Vers. 1'},{key:'vers2',label:'Vers. 2'},{key:'erledigt',label:'Erledigt'}];
+
+let invoices = [];
+let settings = { threshold: 30, people: [] };
+let dirHandle = null;
+let editingId = null;
+let activeStatusFilter = 'all';
+let activePersonFilter = 'all';
+let activeBezahltFilter = 'all';
+let selectedIds = new Set();
+let openDetailId = null;
+let currentImages = [];
+let unlocked = false;
+let erstattungList = []; // aktuell geladene Vorgänge im Erstattungs-Panel
+
+function uid(){ return 'inv_' + Date.now() + '_' + Math.random().toString(36).slice(2,8); }
+function todayISO(){ return new Date().toISOString().slice(0,10); }
+function daysBetween(a,b){ return Math.floor((new Date(b) - new Date(a)) / 86400000); }
+function fmtEUR(n){ return (Number(n)||0).toLocaleString('de-DE',{style:'currency',currency:'EUR'}); }
+function fmtDate(d){ if(!d) return '–'; const [y,m,day]=d.split('-'); return `${day}.${m}.${y}`; }
+function escapeHtml(s){ return (s||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function slugify(s){ return (s||'').toLowerCase().replace(/[äöüß]/g, c=>({'ä':'ae','ö':'oe','ü':'ue','ß':'ss'}[c])).replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,40) || 'beleg'; }
+
+/* ===========================================================
+   Einfaches App-Passwort (reine Zugangssperre, keine Verschlüsselung)
+=========================================================== */
+async function sha256Hex(str){
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function renderLockPanel(){
+  const panel = document.getElementById('lock-panel');
+  panel.classList.toggle('unlocked', unlocked);
+  if(unlocked){
+    panel.innerHTML = `<h2>🔓 Entsperrt</h2><p>Für diese Sitzung freigeschaltet.</p><button class="btn" id="lock-again-btn">Sperren</button>`;
+    document.getElementById('lock-again-btn').addEventListener('click', ()=>{
+      unlocked = false; renderLockPanel();
+    });
+    return;
+  }
+  const hasHash = !!localStorage.getItem('rl-pwhash');
+  if(!hasHash){
+    panel.innerHTML = `
+      <h2>🔒 App-Passwort festlegen</h2>
+      <p>Dieses Passwort ist nur eine Zugangssperre für dieses Gerät – es verschlüsselt nichts. Es verhindert, dass jemand die App öffnet und sofort alle Rechnungen sieht. Vergessen ist kein Problem: unten kannst du es jederzeit zurücksetzen, ohne dass Daten verloren gehen.</p>
+      <div class="lock-row">
+        <input type="password" id="lock-password" placeholder="Neues Passwort (mind. 4 Zeichen)">
+        <button class="btn" id="unlock-btn">Passwort setzen</button>
+      </div>
+      <div class="lock-error" id="lock-error"></div>`;
+    document.getElementById('unlock-btn').addEventListener('click', async ()=>{
+      const pw = document.getElementById('lock-password').value;
+      if(!pw || pw.length < 4){ document.getElementById('lock-error').textContent = 'Bitte mindestens 4 Zeichen.'; return; }
+      localStorage.setItem('rl-pwhash', await sha256Hex(pw));
+      unlocked = true; onUnlocked();
+    });
+  } else {
+    panel.innerHTML = `
+      <h2>🔒 App-Passwort</h2>
+      <p>Bitte Passwort eingeben, um die App auf diesem Gerät zu entsperren.</p>
+      <div class="lock-row">
+        <input type="password" id="lock-password" placeholder="Passwort">
+        <button class="btn" id="unlock-btn">Entsperren</button>
+      </div>
+      <div class="lock-error" id="lock-error"></div>
+      <button class="lock-link" id="forgot-btn">Passwort vergessen? Hier zurücksetzen</button>`;
+    document.getElementById('unlock-btn').addEventListener('click', tryUnlock);
+    document.getElementById('lock-password').addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
+    document.getElementById('forgot-btn').addEventListener('click', ()=>{
+      if(confirm('Nur die App-Sperre auf diesem Gerät wird zurückgesetzt. Deine Rechnungsdaten in OneDrive/Drive bleiben unangetastet. Fortfahren?')){
+        localStorage.removeItem('rl-pwhash');
+        renderLockPanel();
+      }
+    });
+  }
+}
+async function tryUnlock(){
+  const pw = document.getElementById('lock-password').value;
+  const hash = await sha256Hex(pw || '');
+  if(hash === localStorage.getItem('rl-pwhash')){ unlocked = true; onUnlocked(); }
+  else{ document.getElementById('lock-error').textContent = 'Falsches Passwort.'; }
+}
+async function onUnlocked(){
+  renderLockPanel();
+  renderOutbox();
+  const savedHandle = await idbGet('kv','dirHandle').catch(()=>null);
+  if(savedHandle && hasFSAccess){
+    dirHandle = savedHandle;
+    const ok = await verifyPermission(dirHandle, true).catch(()=>false);
+    if(ok) await setupFolder();
+  }
+}
+
+/* ===========================================================
+   IndexedDB: Ordner-Handle + lokaler Scan-Verlauf
+=========================================================== */
+const DB_NAME='rechnungslauf-db', DB_VERSION=1;
+function idbOpen(){
+  return new Promise((resolve,reject)=>{
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if(!db.objectStoreNames.contains('kv')) db.createObjectStore('kv');
+      if(!db.objectStoreNames.contains('outbox')) db.createObjectStore('outbox', {keyPath:'createdAt'});
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+async function idbSet(store, key, value){
+  const db = await idbOpen();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(store,'readwrite');
+    tx.objectStore(store).put(value, key);
+    tx.oncomplete=()=>resolve(); tx.onerror=()=>reject(tx.error);
+  });
+}
+async function idbGet(store, key){
+  const db = await idbOpen();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(store,'readonly');
+    const req = tx.objectStore(store).get(key);
+    req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error);
+  });
+}
+async function outboxAdd(entry){
+  const db = await idbOpen();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction('outbox','readwrite');
+    tx.objectStore('outbox').put(entry);
+    tx.oncomplete=()=>resolve(); tx.onerror=()=>reject(tx.error);
+  });
+}
+async function outboxAll(){
+  const db = await idbOpen();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction('outbox','readonly');
+    const req = tx.objectStore('outbox').getAll();
+    req.onsuccess=()=>resolve(req.result.sort((a,b)=> b.createdAt.localeCompare(a.createdAt)));
+    req.onerror=()=>reject(req.error);
+  });
+}
+async function outboxClear(){
+  const db = await idbOpen();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction('outbox','readwrite');
+    tx.objectStore('outbox').clear();
+    tx.oncomplete=()=>resolve(); tx.onerror=()=>reject(tx.error);
+  });
+}
+
+/* ===========================================================
+   Tabs
+=========================================================== */
+function setTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  document.getElementById('view-scan').classList.toggle('active', name==='scan');
+  document.getElementById('view-track').classList.toggle('active', name==='track');
+  document.getElementById('view-settings').classList.toggle('active', name==='settings');
+  document.getElementById('view-trash').classList.toggle('active', name==='trash');
+  localStorage.setItem('rl-last-tab', name);
+  if(name==='settings') renderPersonSettings();
+  if(name==='trash') renderTrash();
+}
+document.querySelectorAll('.tab').forEach(t=> t.addEventListener('click', ()=> setTab(t.dataset.tab)));
+
+/* ===========================================================
+   Personen: Hilfsfunktionen & Einstellungen
+=========================================================== */
+function getPerson(name){ return settings.people.find(p=>p.name===name); }
+function getPipelineStages(inv){
+  const count = inv.manualPipeline || (()=>{
+    const p = getPerson(inv.person);
+    if(!p) return 2;
+    return (inv.typ==='rezept' ? p.rezeptVersicherungen : p.rechnungVersicherungen) || 2;
+  })();
+  return count === 1 ? ONE_INS_STAGES : TWO_INS_STAGES;
+}
+function fillPersonSelect(sel){
+  sel.innerHTML = settings.people.map(p=>`<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`).join('')
+    || '<option value="">Erst in „Personen" anlegen</option>';
+}
+function renderPersonSettings(){
+  const el = document.getElementById('person-list');
+  if(settings.people.length===0){
+    el.innerHTML = '<div class="empty">Noch keine Personen angelegt.</div>';
+  } else {
+    el.innerHTML = settings.people.map((p,i)=>`
+      <div class="person-row" data-i="${i}">
+        <input type="text" class="pp-name" value="${escapeHtml(p.name)}" placeholder="Name">
+        <select class="pp-rechnung">
+          <option value="1" ${p.rechnungVersicherungen===1?'selected':''}>Rechnung: 1 Versicherung</option>
+          <option value="2" ${p.rechnungVersicherungen===2?'selected':''}>Rechnung: 2 Versicherungen</option>
+        </select>
+        <select class="pp-rezept">
+          <option value="1" ${p.rezeptVersicherungen===1?'selected':''}>Rezept: 1 Versicherung</option>
+          <option value="2" ${p.rezeptVersicherungen===2?'selected':''}>Rezept: 2 Versicherungen</option>
+        </select>
+        <button class="icon-btn pp-del" title="Entfernen">🗑</button>
+      </div>`).join('');
+    el.querySelectorAll('.pp-del').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const i = Number(btn.closest('.person-row').dataset.i);
+        settings.people.splice(i,1);
+        renderPersonSettings();
+      });
+    });
+  }
+}
+document.getElementById('add-person-btn').addEventListener('click', ()=>{
+  settings.people.push({ name:'', rechnungVersicherungen:2, rezeptVersicherungen:2 });
+  renderPersonSettings();
+});
+document.getElementById('save-people-btn').addEventListener('click', async ()=>{
+  const rows = document.querySelectorAll('#person-list .person-row');
+  const people = [];
+  rows.forEach(row=>{
+    const name = row.querySelector('.pp-name').value.trim();
+    if(!name) return;
+    people.push({
+      name,
+      rechnungVersicherungen: Number(row.querySelector('.pp-rechnung').value),
+      rezeptVersicherungen: Number(row.querySelector('.pp-rezept').value)
+    });
+  });
+  settings.people = people;
+  fillPersonSelect(document.getElementById('m-person'));
+  fillPersonSelect(document.getElementById('f-person'));
+  renderPersonFilters();
+  await saveToFolder();
+  document.getElementById('people-status').textContent = 'Gespeichert.';
+  document.getElementById('people-status').className = 'status-line ok';
+  render();
+});
+
+/* ===========================================================
+   SCAN-ANSICHT (Handy)
+=========================================================== */
+document.getElementById('capture-box').addEventListener('click', ()=> document.getElementById('cam-input').click());
+document.getElementById('add-page-btn').addEventListener('click', ()=> document.getElementById('cam-input').click());
+document.getElementById('cam-input').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const { dataUrl, blob } = await downscaleImage(file);
+  currentImages.push({ dataUrl, blob });
+  e.target.value = '';
+  renderPageThumbs();
+  if(currentImages.length === 1){
+    document.getElementById('m-datum').value = todayISO();
+    runOCR(blob);
+  }
+});
+function renderPageThumbs(){
+  const el = document.getElementById('page-thumbs');
+  document.getElementById('capture-placeholder').style.display = currentImages.length ? 'none' : 'block';
+  document.getElementById('add-page-btn').style.display = currentImages.length ? 'block' : 'none';
+  el.innerHTML = currentImages.map((img,i)=>`
+    <div class="page-thumb"><span class="num">${i+1}</span><img src="${img.dataUrl}"><button class="rm" data-i="${i}">✕</button></div>`).join('');
+  el.querySelectorAll('.rm').forEach(btn=>{
+    btn.addEventListener('click', ()=>{ currentImages.splice(Number(btn.dataset.i),1); renderPageThumbs(); });
+  });
+}
+function downscaleImage(file, maxDim=1600, quality=0.8){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if(width > height && width > maxDim){ height = height*maxDim/width; width = maxDim; }
+        else if(height > maxDim){ width = width*maxDim/height; height = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        canvas.toBlob((blob)=>{
+          const fr = new FileReader();
+          fr.onload = () => resolve({ dataUrl: fr.result, blob });
+          fr.readAsDataURL(blob);
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+async function runOCR(blob){
+  const statusEl = document.getElementById('ocr-status');
+  statusEl.textContent = 'Seite 1 wird gelesen … (läuft lokal auf dem Gerät)';
+  statusEl.className = 'status-line';
+  try{
+    const { data: { text } } = await Tesseract.recognize(blob, 'deu');
+    const parsed = parseInvoiceText(text);
+    if(parsed.datum) document.getElementById('m-datum').value = parsed.datum;
+    if(parsed.betrag) document.getElementById('m-betrag').value = parsed.betrag;
+    statusEl.textContent = 'Seite 1 erkannt – bitte Felder prüfen. Weitere Seiten werden nicht automatisch ausgelesen.';
+    statusEl.className = 'status-line ok';
+  }catch(err){
+    statusEl.textContent = 'Texterkennung fehlgeschlagen – bitte Felder manuell ausfüllen.';
+    statusEl.className = 'status-line warn';
+  }
+}
+function parseInvoiceText(text){
+  let datum = null;
+  const dateMatch = text.match(/(\d{1,2})[.\/](\d{1,2})[.\/](\d{2,4})/);
+  if(dateMatch){
+    let [, d, m, y] = dateMatch;
+    if(y.length===2) y = '20'+y;
+    datum = `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+  }
+  let betrag = null;
+  const amounts = [...text.matchAll(/(\d{1,5}[.,]\d{2})\s*(?:€|EUR)?/g)].map(m=>m[1].replace('.','').replace(',','.'));
+  if(amounts.length) betrag = Math.max(...amounts.map(Number)).toFixed(2);
+  return { datum, betrag };
+}
+
+document.getElementById('save-share-btn').addEventListener('click', async ()=>{
+  const person = document.getElementById('m-person').value;
+  const typ = document.getElementById('m-typ').value;
+  const datum = document.getElementById('m-datum').value || todayISO();
+  const arzt = document.getElementById('m-arzt').value.trim();
+  const betrag = document.getElementById('m-betrag').value;
+  const notiz = document.getElementById('m-notiz').value.trim();
+  const shareStatus = document.getElementById('share-status');
+
+  if(!unlocked){ alert('Bitte zuerst oben das App-Passwort eingeben.'); return; }
+  if(!person){ alert('Bitte zuerst unter „Personen" mindestens eine Person anlegen.'); return; }
+  if(!arzt){ alert('Bitte Arzt oder Praxis angeben.'); return; }
+  if(currentImages.length === 0){ alert('Bitte zuerst mindestens ein Foto aufnehmen.'); return; }
+
+  const createdAt = new Date().toISOString();
+  const entry = { createdAt, person, typ, datum, arzt, betrag: Number(betrag)||0, notiz,
+                  images: currentImages.map(i=>i.dataUrl), mime: 'image/jpeg' };
+
+  await outboxAdd({ createdAt, sent:false, person, arzt, betrag: entry.betrag });
+  renderOutbox();
+
+  const filename = `eingang_${Date.now()}.json`;
+  const blob = new Blob([JSON.stringify(entry)], { type:'application/json' });
+  const jsonFile = new File([blob], filename, { type:'application/json' });
+
+  if(navigator.canShare && navigator.canShare({ files:[jsonFile] })){
+    try{
+      await navigator.share({ files:[jsonFile], title:'Rechnungslauf', text:'Im Ordner Rechnungslauf/eingang speichern' });
+      await outboxAdd({ createdAt, sent:true, person, arzt, betrag: entry.betrag });
+      shareStatus.textContent = 'Geteilt. Bitte im Ordner „Rechnungslauf/eingang" ablegen.';
+      shareStatus.className = 'status-line ok';
+    }catch(err){
+      shareStatus.textContent = 'Teilen abgebrochen – Eintrag bleibt lokal gespeichert.';
+      shareStatus.className = 'status-line warn';
+    }
+  } else {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+    shareStatus.textContent = 'Heruntergeladen – bitte manuell in „Rechnungslauf/eingang" verschieben.';
+    shareStatus.className = 'status-line warn';
+  }
+  resetScanForm();
+  renderOutbox();
+});
+function resetScanForm(){
+  currentImages = [];
+  renderPageThumbs();
+  document.getElementById('cam-input').value='';
+  document.getElementById('m-datum').value='';
+  document.getElementById('m-arzt').value='';
+  document.getElementById('m-betrag').value='';
+  document.getElementById('m-notiz').value='';
+  document.getElementById('ocr-status').textContent='';
+}
+async function renderOutbox(){
+  const el = document.getElementById('outbox-list');
+  if(!unlocked){ el.innerHTML = '<div class="empty">🔒 Bitte oben entsperren.</div>'; return; }
+  const items = await outboxAll();
+  if(items.length===0){ el.innerHTML = '<div class="empty">Noch keine Scans auf diesem Gerät.</div>'; return; }
+  el.innerHTML = items.slice(0,15).map(it=>`
+    <div class="outbox-item">
+      <span>${escapeHtml(it.person||'')} · ${escapeHtml(it.arzt)} · ${fmtEUR(it.betrag)}</span>
+      <span class="pill ${it.sent ? 'sent':'pending'}">${it.sent ? 'geteilt' : 'noch nicht geteilt'}</span>
+    </div>`).join('') + `<button class="btn btn-ghost" id="clear-outbox-btn" style="margin-top:12px;width:100%;">Verlauf auf diesem Gerät löschen</button>`;
+  document.getElementById('clear-outbox-btn').addEventListener('click', async ()=>{
+    if(confirm('Lokalen Scan-Verlauf auf diesem Gerät löschen?')){ await outboxClear(); renderOutbox(); }
+  });
+}
+
+/* ===========================================================
+   TRACKER-ANSICHT (PC)
+=========================================================== */
+const hasFSAccess = 'showDirectoryPicker' in window;
+document.getElementById('fs-support-note').textContent = hasFSAccess
+  ? 'Unterstützt in diesem Browser (Chrome/Edge).'
+  : 'Dieser Browser unterstützt keine Ordner-Verknüpfung (nutze Chrome oder Edge).';
+
+async function verifyPermission(handle, readWrite){
+  const opts = readWrite ? { mode:'readwrite' } : {};
+  if((await handle.queryPermission(opts)) === 'granted') return true;
+  if((await handle.requestPermission(opts)) === 'granted') return true;
+  return false;
+}
+document.getElementById('link-folder-btn').addEventListener('click', async ()=>{
+  if(!unlocked){ alert('Bitte zuerst oben entsperren.'); return; }
+  try{
+    dirHandle = await window.showDirectoryPicker();
+    await idbSet('kv','dirHandle', dirHandle);
+    await setupFolder();
+  }catch(err){}
+});
+async function setupFolder(){
+  if(!(await verifyPermission(dirHandle, true))) return;
+  await dirHandle.getDirectoryHandle('eingang', { create:true });
+  await dirHandle.getDirectoryHandle('scans', { create:true });
+  await dirHandle.getDirectoryHandle('pdfs', { create:true });
+  await dirHandle.getDirectoryHandle('erstattungen', { create:true });
+  await dirHandle.getDirectoryHandle('versand', { create:true });
+  document.getElementById('folder-dot').classList.add('on');
+  document.getElementById('folder-text').textContent = `Verknüpft: „${dirHandle.name}"`;
+  await loadFromFolder();
+  await importEingang();
+}
+async function loadFromFolder(){
+  try{
+    const fileHandle = await dirHandle.getFileHandle('rechnungen.json', { create:true });
+    const file = await fileHandle.getFile();
+    const text = await file.text();
+    if(text.trim()){
+      const data = JSON.parse(text);
+      invoices = data.invoices || [];
+      settings = data.settings || { threshold:30, people:[] };
+      if(!settings.people) settings.people = [];
+    }
+  }catch(err){ console.error(err); }
+  document.getElementById('threshold').value = settings.threshold;
+  fillPersonSelect(document.getElementById('m-person'));
+  fillPersonSelect(document.getElementById('f-person'));
+  renderPersonSettings();
+  render();
+}
+async function saveToFolder(){
+  if(!dirHandle) return;
+  try{
+    const fileHandle = await dirHandle.getFileHandle('rechnungen.json', { create:true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(JSON.stringify({ settings, invoices }, null, 2));
+    await writable.close();
+  }catch(err){ console.error('Speichern fehlgeschlagen', err); }
+}
+document.getElementById('import-eingang-btn').addEventListener('click', importEingang);
+async function importEingang(){
+  if(!dirHandle) return;
+  const eingang = await dirHandle.getDirectoryHandle('eingang', { create:true });
+  const scans = await dirHandle.getDirectoryHandle('scans', { create:true });
+  let imported = 0;
+  for await (const [name, handle] of eingang.entries()){
+    if(handle.kind !== 'file' || !name.endsWith('.json')) continue;
+    try{
+      const file = await handle.getFile();
+      const entry = JSON.parse(await file.text());
+      const pages = entry.images || (entry.imageBase64 ? [entry.imageBase64] : []);
+      const datePart = entry.datum || todayISO();
+      const slug = slugify(entry.arzt || 'beleg');
+      const groupId = Date.now().toString(36);
+      let imageRefs = [];
+      for(let p=0;p<pages.length;p++){
+        const imageRef = `${datePart}_${slug}_${groupId}_s${p+1}.jpg`;
+        const imgFileHandle = await scans.getFileHandle(imageRef, { create:true });
+        const writable = await imgFileHandle.createWritable();
+        const res = await fetch(pages[p]);
+        await writable.write(await res.blob());
+        await writable.close();
+        imageRefs.push(imageRef);
+      }
+      invoices.push({
+        id: uid(), person: entry.person || '', typ: entry.typ || 'rechnung',
+        datum: entry.datum, arzt: entry.arzt, betrag: entry.betrag, notiz: entry.notiz || '',
+        status: 'neu', stageDates: { neu: entry.datum || todayISO(), vers1:null, vers2:null, erledigt:null },
+        manualPipeline: null, imageRefs, mime: entry.mime || 'image/jpeg',
+        bezahlt: false, bezahltDatum: null,
+        erstattungVers1: null, erstattungVers2: null,
+        erstattungVers1Beleg: null, erstattungVers2Beleg: null,
+        pdfPath: null, versandHistorie: [], deletedAt: null
+      });
+      await eingang.removeEntry(name);
+      imported++;
+    }catch(err){ console.error('Import-Fehler bei', name, err); }
+  }
+  if(imported > 0){ await saveToFolder(); render(); }
+  document.getElementById('fs-support-note').textContent = imported > 0
+    ? `${imported} neue Vorgänge aus dem Eingang übernommen.`
+    : 'Keine neuen Einträge im Eingang gefunden.';
+}
+
+/* ---- Status / Pipeline ---- */
+function daysInStage(inv){ const d = inv.stageDates[inv.status]; return d ? daysBetween(d, todayISO()) : 0; }
+function isOverdue(inv){ return inv.status !== 'erledigt' && daysInStage(inv) > settings.threshold; }
+function setStatus(inv, key){
+  inv.status = key;
+  if(!inv.stageDates[key]) inv.stageDates[key] = todayISO();
+}
+
+function render(){ renderStats(); renderStatusFilters(); renderPersonFilters(); renderBezahltFilters(); renderList(); }
+
+function renderStats(){
+  let inArbeit=0, erledigt=0, overdue=0, unbezahlt=0;
+  activeInvoices().forEach(inv=>{
+    if(inv.status==='erledigt') erledigt++; else inArbeit++;
+    if(isOverdue(inv)) overdue++;
+    if(!inv.bezahlt) unbezahlt++;
+  });
+  const cards=[
+    { num: activeInvoices().length, lbl:'Vorgänge gesamt' },
+    { num: inArbeit, lbl:'In Bearbeitung' },
+    { num: unbezahlt, lbl:'Noch nicht bezahlt' },
+    { num: overdue, lbl:`Überfällig (> ${settings.threshold} Tage)`, warn:true }
+  ];
+  document.getElementById('stats').innerHTML = cards.map(c=>`
+    <div class="stat ${c.warn && c.num>0 ? 'warn':''}"><div class="num">${c.num}</div><div class="lbl">${c.lbl}</div></div>`).join('');
+}
+function renderStatusFilters(){
+  const items=[
+    {key:'all', label:'Alle Status'},
+    {key:'neu', label:'Neu'},
+    {key:'vers1', label:'Vers. 1'},
+    {key:'vers2', label:'Vers. 2'},
+    {key:'erledigt', label:'Erledigt'}
+  ];
+  document.getElementById('filters-status').innerHTML = items.map(it=>`
+    <button class="chip ${activeStatusFilter===it.key?'active':''}" data-sf="${it.key}">${it.label}</button>`).join('');
+  document.querySelectorAll('[data-sf]').forEach(el=> el.addEventListener('click', ()=>{ activeStatusFilter = el.dataset.sf; render(); }));
+}
+function renderPersonFilters(){
+  const items=[{key:'all', label:'Alle Personen'}, ...settings.people.map(p=>({key:p.name,label:p.name}))];
+  document.getElementById('filters-person').innerHTML = items.map(it=>`
+    <button class="chip ${activePersonFilter===it.key?'active':''}" data-pf="${escapeHtml(it.key)}">${escapeHtml(it.label)}</button>`).join('');
+  document.querySelectorAll('[data-pf]').forEach(el=> el.addEventListener('click', ()=>{ activePersonFilter = el.dataset.pf; render(); }));
+}
+function renderBezahltFilters(){
+  const items=[{key:'all',label:'Alle'},{key:'offen',label:'Nur unbezahlte'},{key:'bezahlt',label:'Nur bezahlte'}];
+  document.getElementById('filters-bezahlt').innerHTML = items.map(it=>`
+    <button class="chip ${activeBezahltFilter===it.key?'active':''}" data-bf="${it.key}">${it.label}</button>`).join('');
+  document.querySelectorAll('[data-bf]').forEach(el=> el.addEventListener('click', ()=>{ activeBezahltFilter = el.dataset.bf; render(); }));
+}
+
+function activeInvoices(){ return invoices.filter(inv=>!inv.deletedAt); }
+
+function filteredInvoices(){
+  return activeInvoices().filter(inv=>{
+    if(activeStatusFilter !== 'all' && inv.status !== activeStatusFilter) return false;
+    if(activePersonFilter !== 'all' && inv.person !== activePersonFilter) return false;
+    if(activeBezahltFilter === 'offen' && inv.bezahlt) return false;
+    if(activeBezahltFilter === 'bezahlt' && !inv.bezahlt) return false;
+    return true;
+  });
+}
+
+function renderList(){
+  const list = document.getElementById('list');
+  let items = filteredInvoices();
+  items.sort((a,b)=> daysInStage(b) - daysInStage(a));
+
+  if(items.length===0){
+    list.innerHTML = `<div class="empty"><div class="big">Noch nichts hier</div>Verknüpfe deinen Ordner oder erfasse oben einen Vorgang.</div>`;
+    return;
+  }
+
+  list.innerHTML = items.map(inv=>{
+    const stages = getPipelineStages(inv);
+    const currentIdx = stages.findIndex(s=>s.key===inv.status);
+    const overdue = isOverdue(inv);
+    const dis = daysInStage(inv);
+    let tageClass=''; let tageText = inv.status==='erledigt' ? 'erledigt' : dis+' Tg.';
+    if(inv.status==='erledigt') tageClass='done'; else if(overdue) tageClass='warn';
+
+    const pipeline = stages.map((s,i)=>{
+      let cls='stage';
+      if(i < currentIdx) cls+=' done';
+      if(i === currentIdx) cls+=' current';
+      if(i === currentIdx && overdue) cls+=' overdue';
+      return `<div class="${cls}" data-key="${s.key}" data-id="${inv.id}" title="${s.label}"><span class="stage-label">${s.label}</span><div class="seg"></div></div>`;
+    }).join('');
+
+    const pageInfo = (!inv.imageRefs || inv.imageRefs.length===0) ? 'kein Scan' : (inv.imageRefs.length>1 ? `${inv.imageRefs.length} Seiten` : '');
+    const typLabel = inv.typ==='rezept' ? 'Rezept' : 'Rechnung';
+
+    return `
+    <div class="row ${overdue ? 'overdue':''}">
+      <div class="row-main">
+        <input type="checkbox" class="select-box" data-id="${inv.id}" ${selectedIds.has(inv.id) ? 'checked':''}>
+        <div class="datum">${fmtDate(inv.datum)}</div>
+        <div><span class="person-tag">${escapeHtml(inv.person||'–')}</span></div>
+        <div class="clickable" data-toggle="${inv.id}">
+          <div class="arzt">${escapeHtml(inv.arzt)} <span style="font-weight:400;color:var(--ink-soft);font-size:12px;">· ${typLabel}</span></div>
+          ${inv.notiz ? `<div class="notiz">${escapeHtml(inv.notiz)}</div>` : ''}
+          ${pageInfo ? `<div class="notiz">${pageInfo}</div>` : ''}
+        </div>
+        <div class="betrag">${fmtEUR(inv.betrag)}</div>
+        <div class="pipeline">${pipeline}</div>
+        <div class="tage ${tageClass}">${tageText}</div>
+        <button class="pill ${inv.bezahlt ? 'bezahlt':'offen'}" data-toggle-bezahlt="${inv.id}">${inv.bezahlt ? 'bezahlt':'offen'}</button>
+        <div class="actions">
+          <button class="icon-btn" data-pdf="${inv.id}" title="Als Einzel-PDF exportieren">📄</button>
+          <button class="icon-btn" data-edit="${inv.id}" title="Bearbeiten">✎</button>
+          <button class="icon-btn" data-del="${inv.id}" title="Löschen">🗑</button>
+        </div>
+      </div>
+      <div class="detail ${openDetailId===inv.id ? 'open':''}" id="detail-${inv.id}">
+        ${renderDetail(inv)}
+      </div>
+    </div>`;
+  }).join('');
+
+  const visibleIds = new Set(items.map(i=>i.id));
+  [...selectedIds].forEach(id=>{ if(!visibleIds.has(id)) selectedIds.delete(id); });
+
+  document.querySelectorAll('.select-box').forEach(el=>{
+    el.addEventListener('change', ()=>{
+      if(el.checked) selectedIds.add(el.dataset.id); else selectedIds.delete(el.dataset.id);
+      renderBulkBar();
+    });
+  });
+  renderBulkBar();
+
+  document.querySelectorAll('.stage').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      const inv = invoices.find(x=>x.id===el.dataset.id);
+      if(!inv) return;
+      setStatus(inv, el.dataset.key);
+      await saveToFolder(); render();
+    });
+  });
+  document.querySelectorAll('[data-toggle]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      openDetailId = openDetailId === el.dataset.toggle ? null : el.dataset.toggle;
+      render();
+    });
+  });
+  document.querySelectorAll('[data-toggle-bezahlt]').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      const inv = invoices.find(x=>x.id===el.dataset.toggleBezahlt);
+      if(!inv) return;
+      inv.bezahlt = !inv.bezahlt;
+      inv.bezahltDatum = inv.bezahlt ? todayISO() : null;
+      await saveToFolder(); render();
+    });
+  });
+  document.querySelectorAll('[data-edit]').forEach(el=> el.addEventListener('click', ()=> startEdit(el.dataset.edit)));
+  document.querySelectorAll('[data-del]').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      const inv = invoices.find(x=>x.id===el.dataset.del);
+      if(!inv) return;
+      if(confirm('Diesen Vorgang in den Papierkorb verschieben? Du kannst ihn dort wiederherstellen.')){
+        inv.deletedAt = new Date().toISOString();
+        await saveToFolder(); render();
+      }
+    });
+  });
+  document.querySelectorAll('[data-pdf]').forEach(el=> el.addEventListener('click', ()=> exportSinglePdf(el.dataset.pdf)));
+
+  document.querySelectorAll('.detail-save').forEach(el=>{
+    el.addEventListener('click', async ()=>{
+      const inv = invoices.find(x=>x.id===el.dataset.id);
+      if(!inv) return;
+      const wrap = document.getElementById('detail-'+inv.id);
+      const v1 = wrap.querySelector('.d-v1').value;
+      const v2 = wrap.querySelector('.d-v2').value;
+      const manual = wrap.querySelector('.d-pipeline').value;
+      inv.erstattungVers1 = v1==='' ? null : Number(v1);
+      inv.erstattungVers2 = v2==='' ? null : Number(v2);
+      inv.manualPipeline = manual==='auto' ? null : Number(manual);
+      await saveToFolder(); render();
+    });
+  });
+}
+
+function renderDetail(inv){
+  const stages = getPipelineStages(inv);
+  const hasVers2Stage = stages.some(s=>s.key==='vers2');
+  const sumErst = (Number(inv.erstattungVers1)||0) + (Number(inv.erstattungVers2)||0);
+  const diff = Number(inv.betrag||0) - sumErst;
+  const showDiff = inv.erstattungVers1 !== null || inv.erstattungVers2 !== null;
+  return `
+    <div class="detail-grid">
+      <div class="detail-field"><label>Erstattung Vers. 1 (€)</label><input type="number" step="0.01" class="d-v1" value="${inv.erstattungVers1 ?? ''}"></div>
+      <div class="detail-field"><label>Erstattung Vers. 2 (€)</label><input type="number" step="0.01" class="d-v2" value="${inv.erstattungVers2 ?? ''}" ${hasVers2Stage?'':'disabled placeholder="entfällt"'}></div>
+      <div class="detail-field"><label>Pipeline</label>
+        <select class="d-pipeline">
+          <option value="auto" ${!inv.manualPipeline?'selected':''}>Automatisch (nach Person/Typ)</option>
+          <option value="1" ${inv.manualPipeline===1?'selected':''}>Manuell: nur 1 Versicherung</option>
+          <option value="2" ${inv.manualPipeline===2?'selected':''}>Manuell: 2 Versicherungen</option>
+        </select>
+      </div>
+    </div>
+    ${showDiff ? `<div style="margin-top:10px;">Differenz zum Rechnungsbetrag: <span class="diff ${Math.abs(diff)<0.01?'zero':'nonzero'}">${fmtEUR(diff)}</span></div>` : ''}
+    <div class="detail-meta">
+      Einzel-PDF: <code>${inv.pdfPath || 'noch nicht erzeugt'}</code><br>
+      Versand-Historie: ${inv.versandHistorie && inv.versandHistorie.length
+        ? inv.versandHistorie.map(v=>`an ${v.versicherung} am ${fmtDate(v.datum)} (<code>${v.ordner}</code>)`).join(', ')
+        : 'noch kein Versand erfasst'}
+    </div>
+    <div style="margin-top:10px;"><button class="btn btn-sage btn-sm detail-save" data-id="${inv.id}">Details speichern</button></div>
+  `;
+}
+
+function renderBulkBar(){
+  const bar = document.getElementById('bulk-bar');
+  const selected = invoices.filter(inv=>selectedIds.has(inv.id));
+  if(selected.length===0){ bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  const sum = selected.reduce((s,i)=>s+Number(i.betrag||0),0);
+  document.getElementById('bulk-count').textContent = `${selected.length} ausgewählt`;
+  document.getElementById('bulk-sum').textContent = `Summe: ${fmtEUR(sum)}`;
+}
+document.getElementById('clear-selection-btn').addEventListener('click', ()=>{ selectedIds.clear(); render(); });
+
+/* ---- Formular: manuell anlegen / bearbeiten ---- */
+document.getElementById('save-btn').addEventListener('click', async ()=>{
+  const person = document.getElementById('f-person').value;
+  const typ = document.getElementById('f-typ').value;
+  const datum = document.getElementById('f-datum').value || todayISO();
+  const arzt = document.getElementById('f-arzt').value.trim();
+  const betrag = document.getElementById('f-betrag').value;
+  const notiz = document.getElementById('f-notiz').value.trim();
+  if(!arzt){ alert('Bitte Arzt oder Praxis angeben.'); return; }
+
+  if(editingId){
+    const inv = invoices.find(x=>x.id===editingId);
+    Object.assign(inv, { person, typ, datum, arzt, betrag:Number(betrag)||0, notiz });
+  } else {
+    invoices.push({
+      id:uid(), person, typ, datum, arzt, betrag:Number(betrag)||0, notiz,
+      status:'neu', stageDates:{neu:todayISO(),vers1:null,vers2:null,erledigt:null},
+      manualPipeline:null, imageRefs:[], mime:'image/jpeg',
+      bezahlt:false, bezahltDatum:null,
+      erstattungVers1:null, erstattungVers2:null, erstattungVers1Beleg:null, erstattungVers2Beleg:null,
+      pdfPath:null, versandHistorie:[], deletedAt:null
+    });
+  }
+  await saveToFolder(); resetForm(); render();
+});
+document.getElementById('cancel-edit').addEventListener('click', resetForm);
+function startEdit(id){
+  const inv = invoices.find(x=>x.id===id);
+  if(!inv) return;
+  editingId = id;
+  document.getElementById('f-person').value = inv.person;
+  document.getElementById('f-typ').value = inv.typ;
+  document.getElementById('f-datum').value = inv.datum;
+  document.getElementById('f-arzt').value = inv.arzt;
+  document.getElementById('f-betrag').value = inv.betrag;
+  document.getElementById('f-notiz').value = inv.notiz;
+  document.getElementById('form-title').textContent = 'Vorgang bearbeiten';
+  document.getElementById('save-btn').textContent = 'Änderungen speichern';
+  document.getElementById('cancel-edit').style.display = 'inline-block';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function resetForm(){
+  editingId = null;
+  document.getElementById('f-datum').value=''; document.getElementById('f-arzt').value='';
+  document.getElementById('f-betrag').value=''; document.getElementById('f-notiz').value='';
+  document.getElementById('form-title').textContent = 'Neue Rechnung / neues Rezept erfassen';
+  document.getElementById('save-btn').textContent = 'Speichern';
+  document.getElementById('cancel-edit').style.display = 'none';
+}
+document.getElementById('threshold').addEventListener('change', async (e)=>{
+  settings.threshold = Number(e.target.value) || 30;
+  await saveToFolder(); render();
+});
+
+/* ---- Bild-Entschlüsselung entfällt – einfaches Lesen ---- */
+async function getScanDataUrl(imageRef){
+  if(!imageRef || !dirHandle) return null;
+  try{
+    const scans = await dirHandle.getDirectoryHandle('scans');
+    const fileHandle = await scans.getFileHandle(imageRef);
+    const file = await fileHandle.getFile();
+    return await new Promise((resolve,reject)=>{
+      const fr = new FileReader();
+      fr.onload = ()=>resolve(fr.result);
+      fr.onerror = reject;
+      fr.readAsDataURL(file);
+    });
+  }catch(err){ return null; }
+}
+function loadImageDims(dataUrl){
+  return new Promise((resolve,reject)=>{
+    const img = new Image();
+    img.onload = ()=>resolve(img);
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+}
+async function buildPdfForInvoice(doc, inv, withHeaderPage){
+  if(withHeaderPage){
+    doc.setFontSize(13);
+    doc.text(`${inv.typ==='rezept'?'Rezept':'Rechnung'} · ${escapeHtmlPlain(inv.arzt)} · ${fmtDate(inv.datum)} · ${fmtEUR(inv.betrag)}`, 15, 15);
+  }
+  const refs = inv.imageRefs || [];
+  for(let p=0;p<refs.length;p++){
+    const dataUrl = await getScanDataUrl(refs[p]);
+    if(!dataUrl) continue;
+    if(p>0 || !withHeaderPage) doc.addPage();
+    if(p>0){
+      doc.setFontSize(10);
+      doc.text(`${fmtDate(inv.datum)} · ${inv.arzt} · Seite ${p+1}/${refs.length}`, 15, 15);
+    }
+    const img = await loadImageDims(dataUrl);
+    const maxW = 180, maxH = 250;
+    let w = maxW, h = (img.height/img.width)*w;
+    if(h > maxH){ h = maxH; w = (img.width/img.height)*h; }
+    doc.addImage(dataUrl, 'JPEG', 15, 22, w, h);
+  }
+}
+function escapeHtmlPlain(s){ return (s||'').replace(/[<>]/g,''); } // jsPDF braucht kein HTML-Escaping, nur Klartext-Bereinigung
+
+async function exportSinglePdf(id){
+  const inv = invoices.find(x=>x.id===id);
+  if(!inv || !dirHandle) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  await buildPdfForInvoice(doc, inv, true);
+  const pdfBlob = doc.output('blob');
+  const datePart = inv.datum || todayISO();
+  const slug = slugify(inv.arzt);
+  const filename = `${datePart}_${slug}_${inv.id.slice(-6)}.pdf`;
+  const pdfsDir = await dirHandle.getDirectoryHandle('pdfs', { create:true });
+  const fh = await pdfsDir.getFileHandle(filename, { create:true });
+  const writable = await fh.createWritable();
+  await writable.write(pdfBlob);
+  await writable.close();
+  inv.pdfPath = `pdfs/${filename}`;
+  await saveToFolder(); render();
+  alert(`PDF gespeichert unter „pdfs/${filename}".`);
+}
+
+/* ---- Sammel-PDF (freie Auswahl, z. B. fürs eigene Archiv) ---- */
+document.getElementById('bundle-btn').addEventListener('click', async ()=>{
+  if(!dirHandle){ alert('Bitte zuerst einen Ordner verknüpfen.'); return; }
+  const selected = invoices.filter(inv=>selectedIds.has(inv.id));
+  if(selected.length===0) return;
+  const sum = selected.reduce((s,i)=>s+Number(i.betrag||0),0);
+  if(!confirm(`${selected.length} Vorgänge (Summe ${fmtEUR(sum)}) zu einem Sammel-PDF bündeln?`)) return;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'mm', format:'a4' });
+  doc.setFontSize(16); doc.text('Rechnungsübersicht', 15, 20);
+  doc.setFontSize(10); doc.setTextColor(90); doc.text(`Erstellt am ${fmtDate(todayISO())}`, 15, 27);
+  doc.setTextColor(0);
+  let y = 42;
+  doc.setFontSize(11);
+  doc.text('Datum', 15, y); doc.text('Person', 45, y); doc.text('Arzt / Praxis', 80, y); doc.text('Betrag', 195, y, { align:'right' });
+  y += 4; doc.setLineWidth(0.2); doc.line(15, y, 195, y); y += 8;
+  selected.forEach(inv=>{
+    doc.text(fmtDate(inv.datum), 15, y);
+    doc.text((inv.person||'').slice(0,20), 45, y);
+    doc.text((inv.arzt||'').slice(0,35), 80, y);
+    doc.text(fmtEUR(inv.betrag), 195, y, { align:'right' });
+    y += 7;
+    if(y > 270){ doc.addPage(); y = 20; }
+  });
+  y += 3; doc.setLineWidth(0.4); doc.line(15, y, 195, y); y += 8;
+  doc.setFontSize(12); doc.setFont(undefined,'bold');
+  doc.text(`Gesamtsumme: ${fmtEUR(sum)}`, 195, y, { align:'right' });
+  doc.setFont(undefined,'normal');
+
+  for(const inv of selected) await buildPdfForInvoice(doc, inv, false);
+
+  const pdfBlob = doc.output('blob');
+  const filename = `Sammelexport_${todayISO()}.pdf`;
+  const exportDir = await dirHandle.getDirectoryHandle('sammelexport', { create:true });
+  const fh = await exportDir.getFileHandle(filename, { create:true });
+  const writable = await fh.createWritable();
+  await writable.write(pdfBlob);
+  await writable.close();
+  selectedIds.clear(); render();
+  alert(`„sammelexport/${filename}" wurde erstellt.`);
+});
+
+/* ---- CSV-Export ---- */
+document.getElementById('export-csv-btn').addEventListener('click', ()=>{
+  const items = filteredInvoices();
+  const header = ['Datum','Person','Typ','Arzt/Praxis','Betrag','Status','Bezahlt','Erstattung Vers1','Erstattung Vers2','Differenz','Notiz'];
+  const rows = items.map(inv=>{
+    const sumErst = (Number(inv.erstattungVers1)||0) + (Number(inv.erstattungVers2)||0);
+    const diff = Number(inv.betrag||0) - sumErst;
+    return [
+      inv.datum, inv.person, inv.typ==='rezept'?'Rezept':'Rechnung', inv.arzt,
+      Number(inv.betrag||0).toFixed(2).replace('.',','),
+      inv.status, inv.bezahlt?'ja':'nein',
+      inv.erstattungVers1!=null ? Number(inv.erstattungVers1).toFixed(2).replace('.',',') : '',
+      inv.erstattungVers2!=null ? Number(inv.erstattungVers2).toFixed(2).replace('.',',') : '',
+      (inv.erstattungVers1!=null || inv.erstattungVers2!=null) ? diff.toFixed(2).replace('.',',') : '',
+      inv.notiz || ''
+    ];
+  });
+  const sum = items.reduce((s,i)=>s+Number(i.betrag||0),0);
+  rows.push(['','','','','','','','','','','']);
+  rows.push(['Summe','','','', sum.toFixed(2).replace('.',','), '','','','','','']);
+  const csv = [header, ...rows].map(r=> r.map(c=>{
+    const s = String(c ?? '');
+    return /[;"\n]/.test(s) ? '"'+s.replace(/"/g,'""')+'"' : s;
+  }).join(';')).join('\r\n');
+  const blob = new Blob(['\uFEFF'+csv], { type:'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `Rechnungslauf_Export_${todayISO()}.csv`; a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* ===========================================================
+   Erstattungsvermerk-Zuordnung
+=========================================================== */
+let erstattungBelegDataUrl = null;
+document.getElementById('e-file').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{ erstattungBelegDataUrl = reader.result; };
+  reader.readAsDataURL(file);
+});
+document.getElementById('e-load-btn').addEventListener('click', ()=>{
+  const target = document.getElementById('e-target').value; // 'vers1' oder 'vers2'
+  erstattungList = activeInvoices().filter(inv=> inv.status === target);
+  const el = document.getElementById('e-list');
+  const actions = document.getElementById('e-actions');
+  if(erstattungList.length === 0){
+    el.innerHTML = '<div class="empty">Aktuell keine Vorgänge in diesem Status.</div>';
+    actions.style.display = 'none';
+    return;
+  }
+  el.innerHTML = erstattungList.map(inv=>`
+    <div class="erstattung-list-row" data-id="${inv.id}">
+      <input type="checkbox" class="e-select" data-id="${inv.id}" checked>
+      <div class="datum">${fmtDate(inv.datum)}</div>
+      <div>${escapeHtml(inv.person)} · ${escapeHtml(inv.arzt)} (${fmtEUR(inv.betrag)})</div>
+      <div>Betrag</div>
+      <input type="number" step="0.01" class="e-betrag" data-id="${inv.id}" placeholder="erstattet (€)" value="${target==='vers1' ? (inv.erstattungVers1 ?? '') : (inv.erstattungVers2 ?? '')}">
+    </div>`).join('');
+  actions.style.display = 'block';
+  const anyHasVers2 = erstattungList.some(inv=> getPipelineStages(inv).some(s=>s.key==='vers2'));
+  document.getElementById('e-forward-btn').style.display = (target==='vers1' && anyHasVers2) ? 'inline-block' : 'none';
+  document.getElementById('e-finish-btn').style.display = (target==='vers2' || (target==='vers1' && !anyHasVers2)) ? 'inline-block' : 'none';
+  document.getElementById('e-doc-status').textContent = erstattungBelegDataUrl ? 'Beleg ausgewählt.' : 'Kein Beleg ausgewählt – du kannst trotzdem nur die Beträge erfassen.';
+});
+
+async function saveErstattungBeleg(target){
+  if(!erstattungBelegDataUrl || !dirHandle) return null;
+  const dir = await dirHandle.getDirectoryHandle('erstattungen', { create:true });
+  const filename = `erstattung_${target}_${todayISO()}_${Date.now().toString(36)}`;
+  const isImage = erstattungBelegDataUrl.startsWith('data:image');
+  const ext = isImage ? 'jpg' : 'pdf';
+  const fh = await dir.getFileHandle(`${filename}.${ext}`, { create:true });
+  const writable = await fh.createWritable();
+  const res = await fetch(erstattungBelegDataUrl);
+  await writable.write(await res.blob());
+  await writable.close();
+  return `erstattungen/${filename}.${ext}`;
+}
+
+document.getElementById('e-save-btn').addEventListener('click', async ()=>{
+  const target = document.getElementById('e-target').value;
+  const belegPath = await saveErstattungBeleg(target);
+  document.querySelectorAll('.e-select:checked').forEach(cb=>{
+    const inv = invoices.find(x=>x.id===cb.dataset.id);
+    const betragInput = document.querySelector(`.e-betrag[data-id="${cb.dataset.id}"]`);
+    const val = betragInput.value;
+    if(val === '') return;
+    if(target==='vers1'){ inv.erstattungVers1 = Number(val); if(belegPath) inv.erstattungVers1Beleg = belegPath; }
+    else { inv.erstattungVers2 = Number(val); if(belegPath) inv.erstattungVers2Beleg = belegPath; }
+  });
+  await saveToFolder(); render();
+  document.getElementById('e-doc-status').textContent = 'Erstattungen gespeichert.';
+  document.getElementById('e-doc-status').className = 'status-line ok';
+});
+
+document.getElementById('e-finish-btn').addEventListener('click', async ()=>{
+  const selectedInvs = [...document.querySelectorAll('.e-select:checked')].map(cb=> invoices.find(x=>x.id===cb.dataset.id)).filter(Boolean);
+  if(selectedInvs.length===0) return;
+  if(!confirm(`${selectedInvs.length} Vorgänge als erledigt markieren?`)) return;
+  selectedInvs.forEach(inv=> setStatus(inv, 'erledigt'));
+  await saveToFolder(); render();
+  document.getElementById('e-list').innerHTML = '';
+  document.getElementById('e-actions').style.display = 'none';
+});
+
+document.getElementById('e-forward-btn').addEventListener('click', async ()=>{
+  if(!dirHandle){ alert('Bitte zuerst einen Ordner verknüpfen.'); return; }
+  const selectedInvs = [...document.querySelectorAll('.e-select:checked')].map(cb=> invoices.find(x=>x.id===cb.dataset.id)).filter(Boolean);
+  if(selectedInvs.length===0) return;
+  if(!confirm(`${selectedInvs.length} Vorgänge als einzelne PDFs für Versicherung 2 exportieren?`)) return;
+
+  const folderName = `versand/${todayISO()}_Vers2`;
+  const versandDir = await dirHandle.getDirectoryHandle('versand', { create:true });
+  const batchDir = await versandDir.getDirectoryHandle(`${todayISO()}_Vers2`, { create:true });
+
+  // Erstattungsvermerk (Vers. 1) mit in den Versand-Ordner kopieren, falls vorhanden
+  const belegRef = selectedInvs.find(inv=>inv.erstattungVers1Beleg)?.erstattungVers1Beleg;
+  if(belegRef){
+    try{
+      const [dirName, fileName] = belegRef.split('/');
+      const srcDir = await dirHandle.getDirectoryHandle(dirName);
+      const srcFile = await (await srcDir.getFileHandle(fileName)).getFile();
+      const destFh = await batchDir.getFileHandle(fileName, { create:true });
+      const w = await destFh.createWritable();
+      await w.write(srcFile);
+      await w.close();
+    }catch(err){ console.error('Beleg konnte nicht kopiert werden', err); }
+  }
+
+  const { jsPDF } = window.jspdf;
+  for(const inv of selectedInvs){
+    const doc = new jsPDF({ unit:'mm', format:'a4' });
+    await buildPdfForInvoice(doc, inv, true);
+    const pdfBlob = doc.output('blob');
+    const filename = `${inv.datum}_${slugify(inv.arzt)}_${inv.id.slice(-6)}.pdf`;
+    const fh = await batchDir.getFileHandle(filename, { create:true });
+    const w = await fh.createWritable();
+    await w.write(pdfBlob);
+    await w.close();
+
+    setStatus(inv, 'vers2');
+    inv.versandHistorie = inv.versandHistorie || [];
+    inv.versandHistorie.push({ versicherung:'Versicherung 2', datum: todayISO(), ordner: folderName });
+  }
+  await saveToFolder(); render();
+  document.getElementById('e-list').innerHTML = '';
+  document.getElementById('e-actions').style.display = 'none';
+  alert(`${selectedInvs.length} Einzel-PDFs (+ Erstattungsvermerk, falls vorhanden) liegen jetzt in „${folderName}".`);
+});
+
+/* ===========================================================
+   Papierkorb
+=========================================================== */
+async function deleteFileIfExists(relativePath){
+  if(!dirHandle || !relativePath) return;
+  try{
+    const parts = relativePath.split('/');
+    const fileName = parts.pop();
+    let dir = dirHandle;
+    for(const p of parts) dir = await dir.getDirectoryHandle(p);
+    await dir.removeEntry(fileName);
+  }catch(err){ /* Datei existierte nicht mehr – ignorieren */ }
+}
+async function purgeInvoiceFiles(inv){
+  for(const ref of (inv.imageRefs || [])) await deleteFileIfExists('scans/'+ref);
+  if(inv.pdfPath) await deleteFileIfExists(inv.pdfPath);
+}
+
+function renderTrash(){
+  const el = document.getElementById('trash-list');
+  const trashed = invoices.filter(inv=>inv.deletedAt).sort((a,b)=> b.deletedAt.localeCompare(a.deletedAt));
+  if(trashed.length===0){
+    el.innerHTML = '<div class="empty">Papierkorb ist leer.</div>';
+    return;
+  }
+  el.innerHTML = trashed.map(inv=>`
+    <div class="row">
+      <div class="row-main" style="grid-template-columns:88px 92px 1fr 90px 1fr auto;">
+        <div class="datum">${fmtDate(inv.datum)}</div>
+        <div><span class="person-tag">${escapeHtml(inv.person||'–')}</span></div>
+        <div>
+          <div class="arzt">${escapeHtml(inv.arzt)}</div>
+          <div class="notiz">Gelöscht am ${fmtDate(inv.deletedAt.slice(0,10))}</div>
+        </div>
+        <div class="betrag">${fmtEUR(inv.betrag)}</div>
+        <div></div>
+        <div class="actions">
+          <button class="icon-btn" data-restore="${inv.id}" title="Wiederherstellen">↺</button>
+          <button class="icon-btn" data-purge="${inv.id}" title="Endgültig löschen">🗑</button>
+        </div>
+      </div>
+    </div>`).join('');
+
+  document.querySelectorAll('[data-restore]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const inv = invoices.find(x=>x.id===btn.dataset.restore);
+      if(!inv) return;
+      inv.deletedAt = null;
+      await saveToFolder(); renderTrash(); render();
+    });
+  });
+  document.querySelectorAll('[data-purge]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const inv = invoices.find(x=>x.id===btn.dataset.purge);
+      if(!inv) return;
+      if(!confirm('Endgültig löschen? Die zugehörigen Scans und das Einzel-PDF werden dabei ebenfalls aus dem Ordner entfernt. Das kann nicht rückgängig gemacht werden.')) return;
+      await purgeInvoiceFiles(inv);
+      invoices = invoices.filter(x=>x.id!==inv.id);
+      await saveToFolder(); renderTrash(); render();
+    });
+  });
+}
+document.getElementById('empty-trash-btn').addEventListener('click', async ()=>{
+  const trashed = invoices.filter(inv=>inv.deletedAt);
+  if(trashed.length===0) return;
+  if(!confirm(`${trashed.length} Vorgänge endgültig löschen, inkl. aller zugehörigen Scans und Einzel-PDFs im Ordner? Das kann nicht rückgängig gemacht werden.`)) return;
+  for(const inv of trashed) await purgeInvoiceFiles(inv);
+  invoices = invoices.filter(inv=>!inv.deletedAt);
+  await saveToFolder(); renderTrash(); render();
+});
+
+/* ===========================================================
+   Start
+=========================================================== */
+(async function init(){
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  }
+  const isMobile = matchMedia('(pointer:coarse)').matches;
+  setTab(localStorage.getItem('rl-last-tab') || (isMobile ? 'scan' : 'track'));
+  renderLockPanel();
+  fillPersonSelect(document.getElementById('m-person'));
+  fillPersonSelect(document.getElementById('f-person'));
+  document.getElementById('threshold').value = settings.threshold;
+  render();
+})();
+</script>
+</body>
+</html>

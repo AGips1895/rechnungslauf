@@ -1,0 +1,25 @@
+# Auslieferungs-/Arbeitsdateien, gehören nicht ins öffentliche Repo
+files.zip
+uebergabe-claude-code.md
+
+# Nutzerdaten (liegen ohnehin nur in OneDrive/Drive, nie im Repo)
+rechnungen.json
+scans/
+pdfs/
+eingang/
+erstattungen/
+versand/
+sammelexport/
+
+# Betriebssystem-/Editor-Reste
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+.vscode/
+.idea/
+
+# Falls später mal Node-Tooling dazukommt
+node_modules/
+npm-debug.log*
+.env

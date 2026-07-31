@@ -1,0 +1,15 @@
+{
+  "name": "Rechnungslauf",
+  "short_name": "Rechnungslauf",
+  "description": "Arztrechnungen scannen, verfolgen und an Versicherung 1 und 2 weiterleiten.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F7F5F0",
+  "theme_color": "#2B5C56",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}
