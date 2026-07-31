@@ -288,7 +288,7 @@
   <div class="view" id="view-settings">
     <div class="panel">
       <h2>Personen</h2>
-      <p class="status-line">Für jede Person hinterlegst du, über wie viele Versicherungen ihre Rechnungen bzw. Rezepte laufen. Die Namen werden nur in deinen eigenen, verschlüsselt-fern gespeicherten Daten geführt, nie im App-Code.</p>
+      <p class="status-line">Für jede Person legst du fest, über wie viele Versicherungen ihre Rechnungen bzw. Rezepte laufen – getrennt einstellbar, weil das unterschiedlich sein kann. <b>1 Versicherung</b> = einmal einreichen, dann erledigt. <b>2 Versicherungen</b> = erst bei Versicherung 1 einreichen, den Rest anschließend bei Versicherung 2 (z. B. private KV und Beihilfe). Die Namen stehen nur in deinen eigenen Daten in deinem OneDrive/Drive-Ordner, nie im App-Code.</p>
       <div id="person-list"></div>
       <button class="btn btn-ghost" id="add-person-btn" style="margin-top:12px;">+ Person hinzufügen</button>
     </div>
@@ -508,12 +508,12 @@ function renderPersonSettings(){
       <div class="person-row" data-i="${i}">
         <input type="text" class="pp-name" value="${escapeHtml(p.name)}" placeholder="Name">
         <select class="pp-rechnung">
-          <option value="1" ${p.rechnungVersicherungen===1?'selected':''}>Rechnung: 1 Versicherung</option>
-          <option value="2" ${p.rechnungVersicherungen===2?'selected':''}>Rechnung: 2 Versicherungen</option>
+          <option value="1" ${p.rechnungVersicherungen===1?'selected':''}>Rechnungen: 1 Versicherung</option>
+          <option value="2" ${p.rechnungVersicherungen===2?'selected':''}>Rechnungen: 2 Versicherungen</option>
         </select>
         <select class="pp-rezept">
-          <option value="1" ${p.rezeptVersicherungen===1?'selected':''}>Rezept: 1 Versicherung</option>
-          <option value="2" ${p.rezeptVersicherungen===2?'selected':''}>Rezept: 2 Versicherungen</option>
+          <option value="1" ${p.rezeptVersicherungen===1?'selected':''}>Rezepte: 1 Versicherung</option>
+          <option value="2" ${p.rezeptVersicherungen===2?'selected':''}>Rezepte: 2 Versicherungen</option>
         </select>
         <button class="icon-btn pp-del" title="Entfernen">🗑</button>
       </div>`).join('');
