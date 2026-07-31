@@ -148,7 +148,7 @@
   .erstattung-list-row:last-child{border-bottom:none;}
   .erstattung-list-row input[type=number]{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-family:'IBM Plex Mono',monospace;}
 
-  .person-row{display:grid;grid-template-columns:1fr 240px 240px auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);}
+  .person-row{display:grid;grid-template-columns:1fr 240px auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);}
   .person-row:last-child{border-bottom:none;}
   .person-row input{padding:8px 9px;border:1px solid var(--line);border-radius:6px;font-size:14px;}
   .person-row select{padding:8px 9px;border:1px solid var(--line);border-radius:6px;font-size:13px;}
@@ -288,7 +288,7 @@
   <div class="view" id="view-settings">
     <div class="panel">
       <h2>Personen</h2>
-      <p class="status-line">Für jede Person legst du fest, über wie viele Versicherungen ihre Rechnungen bzw. Rezepte laufen – getrennt einstellbar, weil das unterschiedlich sein kann. <b>1 Versicherung</b> = einmal einreichen, dann erledigt. <b>2 Versicherungen</b> = erst bei Versicherung 1 einreichen, den Rest anschließend bei Versicherung 2 (z. B. private KV und Beihilfe). Die Namen stehen nur in deinen eigenen Daten in deinem OneDrive/Drive-Ordner, nie im App-Code.</p>
+      <p class="status-line">Rechnungen laufen bei allen Personen über beide Versicherungen (erst Versicherung 1, den Rest dann Versicherung 2). Für die <b>Rezepte</b> legst du je Person fest, ob sie über <b>1 Versicherung</b> (einmal einreichen, dann erledigt) oder <b>2 Versicherungen</b> laufen. Die Namen stehen nur in deinen eigenen Daten in deinem OneDrive/Drive-Ordner, nie im App-Code.</p>
       <div id="person-list"></div>
       <button class="btn btn-ghost" id="add-person-btn" style="margin-top:12px;">+ Person hinzufügen</button>
     </div>
@@ -507,10 +507,6 @@ function renderPersonSettings(){
     el.innerHTML = settings.people.map((p,i)=>`
       <div class="person-row" data-i="${i}">
         <input type="text" class="pp-name" value="${escapeHtml(p.name)}" placeholder="Name">
-        <select class="pp-rechnung">
-          <option value="1" ${p.rechnungVersicherungen===1?'selected':''}>Rechnungen: 1 Versicherung</option>
-          <option value="2" ${p.rechnungVersicherungen===2?'selected':''}>Rechnungen: 2 Versicherungen</option>
-        </select>
         <select class="pp-rezept">
           <option value="1" ${p.rezeptVersicherungen===1?'selected':''}>Rezepte: 1 Versicherung</option>
           <option value="2" ${p.rezeptVersicherungen===2?'selected':''}>Rezepte: 2 Versicherungen</option>
@@ -538,7 +534,7 @@ document.getElementById('save-people-btn').addEventListener('click', async ()=>{
     if(!name) return;
     people.push({
       name,
-      rechnungVersicherungen: Number(row.querySelector('.pp-rechnung').value),
+      rechnungVersicherungen: 2, // Rechnungen laufen bei allen Personen ueber beide Versicherungen
       rezeptVersicherungen: Number(row.querySelector('.pp-rezept').value)
     });
   });
