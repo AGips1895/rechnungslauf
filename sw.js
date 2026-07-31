@@ -1,4 +1,4 @@
-const CACHE = 'rechnungslauf-v2';
+const CACHE = 'rechnungslauf-v3';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', (e) => {
@@ -13,14 +13,29 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
-// App-Shell: cache-first. Alles andere (z. B. Tesseract-CDN): stale-while-revalidate,
-// damit die OCR-Bibliothek nach dem ersten Laden auch offline greifbar ist.
+// App-Shell (index.html, manifest, icon) + Navigationen: NETWORK-FIRST.
+// So bekommt der Nutzer online immer die neueste Version; nur wenn das Netz
+// fehlt, wird die zuletzt gecachte Fassung geliefert (Offline-Fähigkeit bleibt).
+// Alles andere (z. B. Tesseract-/jsPDF-CDN): stale-while-revalidate.
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
 
-  if (SHELL.some(s => req.url.endsWith(s.replace('./', '')))) {
-    e.respondWith(caches.match(req).then(cached => cached || fetch(req)));
+  const isShell = req.mode === 'navigate' || SHELL.some(s => req.url.endsWith(s.replace('./', '')));
+
+  if (isShell) {
+    e.respondWith(
+      caches.open(CACHE).then(async (cache) => {
+        try {
+          const res = await fetch(req);
+          if (res && res.status === 200) cache.put(req, res.clone());
+          return res;
+        } catch (err) {
+          const cached = await cache.match(req);
+          return cached || cache.match('./index.html');
+        }
+      })
+    );
     return;
   }
 
