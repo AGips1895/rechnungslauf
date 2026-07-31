@@ -50,6 +50,7 @@
   .status-line{font-size:12.5px;color:var(--ink-soft);margin:8px 0;min-height:16px;}
   .status-line.ok{color:var(--sage);}
   .status-line.warn{color:var(--terracotta);}
+  .folder-warning{display:none;background:var(--amber-light);color:var(--amber);border:1px solid var(--amber);border-radius:10px;padding:12px 16px;margin-bottom:20px;font-size:13.5px;line-height:1.45;}
 
   /* Lock */
   .lock-panel{background:var(--petrol);color:#fff;border-radius:12px;padding:18px 20px;margin-bottom:20px;}
@@ -176,6 +177,8 @@
     <button class="tab" data-tab="settings">⚙️ Personen</button>
     <button class="tab" data-tab="trash">🗑 Papierkorb</button>
   </div>
+
+  <div class="folder-warning" id="folder-warning">⚠ <b>Noch kein Speicherordner verknüpft.</b> Deine Eingaben (Personen, Rechnungen …) werden erst dauerhaft gespeichert, wenn du im Tab „🗂 Verwalten" auf „Ordner verknüpfen" gehst und deinen OneDrive-/Drive-Ordner auswählst. Ohne Ordner gehen sie beim Neuladen der Seite verloren.</div>
 
   <!-- SCAN VIEW -->
   <div class="view" id="view-scan">
@@ -408,6 +411,11 @@ async function onUnlocked(){
     const ok = await verifyPermission(dirHandle, true).catch(()=>false);
     if(ok) await setupFolder();
   }
+  updateFolderWarning();
+}
+function updateFolderWarning(){
+  const el = document.getElementById('folder-warning');
+  if(el) el.style.display = (hasFSAccess && !dirHandle) ? 'block' : 'none';
 }
 
 /* ===========================================================
@@ -542,9 +550,16 @@ document.getElementById('save-people-btn').addEventListener('click', async ()=>{
   fillPersonSelect(document.getElementById('m-person'));
   fillPersonSelect(document.getElementById('f-person'));
   renderPersonFilters();
+  const st = document.getElementById('people-status');
+  if(!dirHandle){
+    st.textContent = '⚠ Noch kein Ordner verknüpft – die Personen sind noch NICHT gespeichert und gehen beim Neuladen verloren. Bitte zuerst im Tab „Verwalten" einen Ordner verknüpfen, dann hier erneut speichern.';
+    st.className = 'status-line warn';
+    render();
+    return;
+  }
   await saveToFolder();
-  document.getElementById('people-status').textContent = 'Gespeichert.';
-  document.getElementById('people-status').className = 'status-line ok';
+  st.textContent = 'Gespeichert.';
+  st.className = 'status-line ok';
   render();
 });
 
@@ -734,6 +749,7 @@ async function setupFolder(){
   document.getElementById('folder-text').textContent = `Verknüpft: „${dirHandle.name}"`;
   await loadFromFolder();
   await importEingang();
+  updateFolderWarning();
 }
 async function loadFromFolder(){
   try{

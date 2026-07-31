@@ -1,4 +1,4 @@
-const CACHE = 'rechnungslauf-v8';
+const CACHE = 'rechnungslauf-v9';
 const SHELL = ['./', './index.html', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', (e) => {
